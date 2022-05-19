@@ -40,18 +40,32 @@ impl Screen {
     }
 }
 
-pub fn clear_screen(screen: &mut Screen) {
-    write!(screen.stdout,
+pub fn clear_screen(screen: &mut Screen) -> Result<(), &'static str> {
+    let res = write!(screen.stdout,
            "{}{}",
-           termion::clear::All,
-           termion::cursor::Goto(1, 1))
-            .unwrap();
+           termion::clear::All, 
+           termion::cursor::Goto(1, 1)); 
+    if let Err(_e) = res {
+        return Err("could not clear screen");
+    }
+    Ok(())
 }
 
-pub fn putchar(screen: &mut Screen, x: u16, y: u16, c: char) {
-    write!(screen.stdout,
+pub fn putchar(screen: &mut Screen, x: u16, y: u16, c: char) -> Result<(), &'static str>{
+    let res = write!(screen.stdout,
            "{}{}",
-           termion::cursor::Goto(x, y), 
-           c)
-            .unwrap();
+           termion::cursor::Goto(x + 1, y + 1), 
+           c);
+
+    if let Err(_e) = res {
+        return Err("could not clear screen");
+    }
+    Ok(())
+}
+
+pub fn flush_screen(screen: &mut Screen) -> Result<(), &'static str> {
+    if let Err(e) = screen.stdout.flush() {
+        return Err("could not flush screen");
+    }
+    Ok(())
 }
