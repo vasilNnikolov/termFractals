@@ -24,12 +24,26 @@ impl<T> Buffer<T> {
         })
     }
     pub fn get(&self, x: u16, y: u16) -> Result<T, &'static str> {
-
+        if x < self.size.0 && y < self.size.1 {
+            let new_x = (x + self.pointers.0)%self.size.0;
+            let new_y = (y + self.pointers.1)%self.size.1;
+            return Ok(self.contents.get(new_y)?.get(new_x?));
+        }
+        Err("x and y should be in the size of the buffer")
     }
     pub fn shift(&mut self, direction: Direction, times: u16) {
         match direction {
             Direction::Down {
-
+                self.pointers.1 -= times;
+            }, 
+            Direction::Up {
+                self.pointers.1 += times;
+            }
+            Direction::Left {
+                self.pointers.0 += times;
+            }, 
+            Direction::Right {
+                self.pointers.0 -= times;
             }
         }
     }
