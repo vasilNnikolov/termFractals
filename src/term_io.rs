@@ -39,7 +39,7 @@ impl Screen {
         if x < self.term_size.0 && y < self.term_size.1 {
             let (w, h) = self.term_size;
             let x_c = ((x as f64) - (w as f64)/2.0)*self.scale;
-            let y_c = ((y as f64) - (h as f64)/2.0)*self.scale*self.vertical_scaling_constant;
+            let y_c = -((y as f64) - (h as f64)/2.0)*self.scale*self.vertical_scaling_constant;
             return Ok(self.center + Complex::new(x_c, y_c));
         }
         Err("specified screen coordinates not on screen")
@@ -82,8 +82,8 @@ impl Screen {
         } 
         Ok(())
     }
-    pub fn on_move(&mut self, direction: Direction) {
-        self.buffer.shift(direction, 1, None);
+    pub fn on_move(&mut self, direction: Direction) -> Result<(), &'static str>{
+        self.buffer.shift(direction, 1, None)?;
         match direction {
             Direction::Right => {
                 self.center += Complex::new(-self.scale, 0.0);
@@ -98,6 +98,7 @@ impl Screen {
                 self.center += Complex::new(0.0, self.scale*self.vertical_scaling_constant);
             },
         }
+        Ok(())
     }
 }
 

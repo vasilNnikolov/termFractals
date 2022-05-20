@@ -20,7 +20,6 @@ fn render_mandelbrot_pixel(screen: &mut term_io::Screen, x: u16, y: u16) -> Resu
     if x >= screen.term_size.0 || y >= screen.term_size.1 {
         return Err("cannot render pixel outside of screen");
     }
-
     let mut in_set = true;
     let mut z = Complex::new(0.0, 0.0); 
     let c = screen.get_complex_coords(x, y)?;

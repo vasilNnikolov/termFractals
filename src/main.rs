@@ -23,8 +23,6 @@ fn run() -> Result<(), &'static str>{
     screen.clear_screen()?;
 
     let mut should_end_program = false;
-    let zoom_speed = 1.01;
-    let move_speed = 0.02;
     loop {
         screen.clear_screen()?;
         mandelbrot::render_whole_mandelbrot(&mut screen)?;
@@ -35,10 +33,10 @@ fn run() -> Result<(), &'static str>{
                 None => continue,
                 Some('q') => {should_end_program = true; break;}, 
                 // movement controlls
-                Some('h') => {screen.on_move(Direction::Left); break;}
-                Some('j') => {screen.on_move(Direction::Down); break;}
-                Some('k') => {screen.on_move(Direction::Up); break;}
-                Some('l') => {screen.on_move(Direction::Right); break;}
+                Some('h') => {screen.on_move(Direction::Left)?; break;}
+                Some('j') => {screen.on_move(Direction::Down)?; break;}
+                Some('k') => {screen.on_move(Direction::Up)?; break;}
+                Some('l') => {screen.on_move(Direction::Right)?; break;}
                 // zoom control
                 // Some('z') => {screen.scale *= zoom_speed; break;}
                 // Some('x') => {screen.scale /= zoom_speed; break;}
