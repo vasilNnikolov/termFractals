@@ -4,7 +4,7 @@ use num::complex::Complex;
 use termion::raw::IntoRawMode;
 use termion::async_stdin;
 use std::io::{Write, stdout};
-use crate::cyclic_buffer::Buffer;
+use crate::cyclic_buffer::{Buffer, Direction};
 
 pub struct Screen {
     pub stdin: termion::AsyncReader, 
@@ -13,6 +13,7 @@ pub struct Screen {
     pub scale: f64, 
     pub center: Complex<f64>,
     pub buffer: Buffer<Option<char>>,
+    vertical_scaling_constant: f64
 }
 
 pub fn setup_terminal() -> Screen {
@@ -28,7 +29,8 @@ pub fn setup_terminal() -> Screen {
         term_size: (w, h),
         scale: 0.02, 
         center: Complex::new(0.0, 0.0),
-        buffer: buffer 
+        buffer: buffer, 
+        vertical_scaling_constant: 2.0
     }
 }
 
@@ -37,7 +39,7 @@ impl Screen {
         if x < self.term_size.0 && y < self.term_size.1 {
             let (w, h) = self.term_size;
             let x_c = ((x as f64) - (w as f64)/2.0)*self.scale;
-            let y_c = ((y as f64) - (h as f64)/2.0)*self.scale*2.0;
+            let y_c = ((y as f64) - (h as f64)/2.0)*self.scale*self.vertical_scaling_constant;
             return Ok(self.center + Complex::new(x_c, y_c));
         }
         Err("specified screen coordinates not on screen")
@@ -79,6 +81,23 @@ impl Screen {
             }
         } 
         Ok(())
+    }
+    pub fn on_move(&mut self, direction: Direction) {
+        self.buffer.shift(direction, 1, None);
+        match direction {
+            Direction::Right => {
+                self.center += Complex::new(-self.scale, 0.0);
+            },
+            Direction::Left => {
+                self.center += Complex::new(self.scale, 0.0);
+            },
+            Direction::Up => {
+                self.center += Complex::new(0.0, -self.scale*self.vertical_scaling_constant);
+            },
+            Direction::Down => {
+                self.center += Complex::new(0.0, self.scale*self.vertical_scaling_constant);
+            },
+        }
     }
 }
 

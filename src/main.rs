@@ -9,33 +9,14 @@ mod term_io;
 mod cyclic_buffer;
 mod mandelbrot;
 
+use cyclic_buffer::Direction;
+
 fn main() {
     if let Err(e) = run() {
         println!("main exited with error: {}", e);
     }
 }
 
-// fn test_run() -> Result<(), &'static str> {
-//     let mut screen = term_io::setup_terminal();
-//     screen.clear_screen()?;
-//     let mut buffer: cyclic_buffer::Buffer<Option<char>> = cyclic_buffer::Buffer::new(screen.term_size, None);
-//     buffer.put(Some('a'), 0, 0)?;
-//     buffer.put(Some('b'), 1, 1)?;
-//     buffer.put(Some('j'), 2, 2)?;
-//     buffer.put(Some('d'), 3, 3)?;
-//     buffer.shift(cyclic_buffer::Direction::Down, 3, None)?;
-//     buffer.shift(cyclic_buffer::Direction::Right, 3, None)?;
-//     for y in 0..buffer.size.1 {
-//         for x in 0..buffer.size.0 {
-//             if let Some(c) = buffer.get(x, y)? {
-//                 screen.putchar(x, y, c)?;
-//             }
-//         }
-//     } 
-//     screen.flush_screen()?;
-//     thread::sleep(Duration::from_millis(2000));
-//     Ok(())
-// }
 fn run() -> Result<(), &'static str>{
     let mut screen = term_io::setup_terminal();
     
@@ -54,13 +35,13 @@ fn run() -> Result<(), &'static str>{
                 None => continue,
                 Some('q') => {should_end_program = true; break;}, 
                 // movement controlls
-                // Some('h') => {screen.center += Complex::new(move_speed, 0.0); break;}
-                // Some('l') => {screen.center += Complex::new(-move_speed, 0.0); break;}
-                // Some('j') => {screen.center += Complex::new(0.0, move_speed); break;}
-                // Some('k') => {screen.center += Complex::new(0.0, -move_speed); break;}
+                Some('h') => {screen.on_move(Direction::Left); break;}
+                Some('j') => {screen.on_move(Direction::Down); break;}
+                Some('k') => {screen.on_move(Direction::Up); break;}
+                Some('l') => {screen.on_move(Direction::Right); break;}
                 // zoom control
-                Some('z') => {screen.scale *= zoom_speed; break;}
-                Some('x') => {screen.scale /= zoom_speed; break;}
+                // Some('z') => {screen.scale *= zoom_speed; break;}
+                // Some('x') => {screen.scale /= zoom_speed; break;}
                 _ => {}
             }
         }

@@ -98,6 +98,7 @@ impl<T> Buffer<T> where
     }
 }
 
+#[derive(Copy, Clone)]
 pub enum Direction {
     Left, Right, Up, Down
 }
