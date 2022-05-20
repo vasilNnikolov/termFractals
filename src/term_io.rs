@@ -38,34 +38,36 @@ impl Screen {
         }
         Err("specified screen coordinates not on screen")
     }
-}
-
-pub fn clear_screen(screen: &mut Screen) -> Result<(), &'static str> {
-    let res = write!(screen.stdout,
-           "{}{}",
-           termion::clear::All, 
-           termion::cursor::Goto(1, 1)); 
-    if let Err(_e) = res {
-        return Err("could not clear screen");
+    pub fn clear_screen(&mut self) -> Result<(), &'static str> {
+        let res = write!(self.stdout,
+               "{}{}",
+               termion::clear::All, 
+               termion::cursor::Goto(1, 1)); 
+        if let Err(_e) = res {
+            return Err("could not clear screen");
+        }
+        Ok(())
     }
-    Ok(())
-}
 
-pub fn putchar(screen: &mut Screen, x: u16, y: u16, c: char) -> Result<(), &'static str>{
-    let res = write!(screen.stdout,
-           "{}{}",
-           termion::cursor::Goto(x + 1, y + 1), 
-           c);
+    pub fn putchar(&mut self, x: u16, y: u16, c: char) -> Result<(), &'static str>{
+        let res = write!(self.stdout,
+               "{}{}",
+               termion::cursor::Goto(x + 1, y + 1), 
+               c);
 
-    if let Err(_e) = res {
-        return Err("could not clear screen");
+        if let Err(_e) = res {
+            return Err("could not clear screen");
+        }
+        Ok(())
     }
-    Ok(())
+
+    pub fn flush_screen(&mut self) -> Result<(), &'static str> {
+        if let Err(e) = self.stdout.flush() {
+            return Err("could not flush screen");
+        }
+        Ok(())
+    }
 }
 
-pub fn flush_screen(screen: &mut Screen) -> Result<(), &'static str> {
-    if let Err(e) = screen.stdout.flush() {
-        return Err("could not flush screen");
-    }
-    Ok(())
-}
+
+

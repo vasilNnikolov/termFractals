@@ -1,5 +1,5 @@
 
-use std::io::Write;
+// use std::io::Write;
 use std::thread;
 use std::time::Duration;
 
@@ -8,6 +8,7 @@ use num::complex::Complex;
 
 mod user_input;
 mod term_io;
+mod cyclic_buffer;
 
 fn render_mandlebrot(screen: &mut term_io::Screen) -> Result<(), &'static str> {
     let (w, h) = screen.term_size;
@@ -30,14 +31,12 @@ fn render_mandlebrot(screen: &mut term_io::Screen) -> Result<(), &'static str> {
                 }
             }
             if in_set {
-                term_io::putchar(screen, x, y, '#')?;
+                screen.putchar(x, y, '#')?;
             }
         }
     } 
-    term_io::flush_screen(screen)?;
-
+    screen.flush_screen()?;
     Ok(())
-
 }
 fn main() {
     if let Err(e) = run() {
@@ -45,16 +44,37 @@ fn main() {
     }
 }
 
+fn test_run() -> Result<(), &'static str> {
+    let mut screen = term_io::setup_terminal();
+    screen.clear_screen()?;
+    let mut buffer: cyclic_buffer::Buffer<Option<char>> = cyclic_buffer::Buffer::new(screen.term_size, None);
+    buffer.put(Some('a'), 0, 0)?;
+    buffer.put(Some('b'), 1, 1)?;
+    buffer.put(Some('j'), 2, 2)?;
+    buffer.put(Some('d'), 3, 3)?;
+    buffer.shift(cyclic_buffer::Direction::Down, 3, None)?;
+    buffer.shift(cyclic_buffer::Direction::Right, 3, None)?;
+    for y in 0..buffer.size.1 {
+        for x in 0..buffer.size.0 {
+            if let Some(c) = buffer.get(x, y)? {
+                screen.putchar(x, y, c)?;
+            }
+        }
+    } 
+    screen.flush_screen()?;
+    thread::sleep(Duration::from_millis(2000));
+    Ok(())
+}
 fn run() -> Result<(), &'static str>{
     let mut screen = term_io::setup_terminal();
     
-    term_io::clear_screen(&mut screen)?;
+    screen.clear_screen()?;
 
     let mut should_end_program = false;
-    let move_speed = 0.015;
     let zoom_speed = 1.01;
+    let move_speed = 0.02;
     loop {
-        term_io::clear_screen(&mut screen)?;
+        screen.clear_screen()?;
         render_mandlebrot(&mut screen)?;
         loop {
             let c = user_input::get_char(&mut screen);
@@ -78,9 +98,9 @@ fn run() -> Result<(), &'static str>{
 
         thread::sleep(Duration::from_millis(50));
         
-        term_io::flush_screen(&mut screen)?;
+        screen.flush_screen()?;
     }
-    term_io::clear_screen(&mut screen)?;
+    screen.clear_screen()?;
 
     Ok(())
 }
