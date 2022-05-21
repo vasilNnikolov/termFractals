@@ -36,13 +36,6 @@ pub fn setup_terminal() -> Screen {
     }
 }
 
-fn in_range<T>(x: T, lower: T, upper: T) -> bool 
-where 
-    T: PartialOrd 
-{
-    return lower <= x && x < upper;
-}
-
 impl Screen {
     pub fn get_complex_coords(&self, x: u16, y: u16) -> Result<Complex<f64>, &'static str> {
         if x < self.term_size.0 && y < self.term_size.1 {
@@ -91,20 +84,20 @@ impl Screen {
         } 
         Ok(())
     }
-    pub fn on_move(&mut self, direction: Direction) -> Result<(), &'static str>{
-        self.buffer.shift(direction, 1, None)?;
+    pub fn on_move(&mut self, direction: Direction, times: u16) -> Result<(), &'static str>{
+        self.buffer.shift(direction, times, None)?;
         match direction {
             Direction::Right => {
-                self.center += Complex::new(-self.scale, 0.0);
+                self.center += times as f64*Complex::new(-self.scale, 0.0);
             },
             Direction::Left => {
-                self.center += Complex::new(self.scale, 0.0);
+                self.center += times as f64*Complex::new(self.scale, 0.0);
             },
             Direction::Up => {
-                self.center += Complex::new(0.0, -self.scale*self.vertical_scaling_constant);
+                self.center += times as f64*Complex::new(0.0, -self.scale*self.vertical_scaling_constant);
             },
             Direction::Down => {
-                self.center += Complex::new(0.0, self.scale*self.vertical_scaling_constant);
+                self.center += times as f64*Complex::new(0.0, self.scale*self.vertical_scaling_constant);
             },
         }
         Ok(())
