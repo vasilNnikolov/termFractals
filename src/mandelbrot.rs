@@ -2,6 +2,8 @@ extern crate num;
 use num::complex::Complex;
 
 use crate::term_io;
+// pub const IN_FRACTAL: char = '*';
+// pub const OUTSIDE_FRACTAL: char = '*';
 
 pub fn render_whole_mandelbrot(screen: &mut term_io::Screen) -> Result<(), &'static str> {
     let (w, h) = screen.term_size;

@@ -5,6 +5,13 @@ use termion::raw::IntoRawMode;
 use termion::async_stdin;
 use std::io::{Write, stdout};
 use crate::cyclic_buffer::{Buffer, Direction};
+use crate::mandelbrot;
+
+fn in_range<T>(x: T, lower: T, upper: T) -> bool where 
+T: PartialOrd 
+{
+    return lower <= x && x < upper;
+}
 
 pub struct Screen {
     pub stdin: termion::AsyncReader, 
@@ -109,34 +116,64 @@ impl Screen {
             let (w, h) = self.term_size;
             let mut buff: Buffer<Option<char>> = Buffer::new((w, h), None); 
             buff.pointers = self.buffer.pointers;
-            // let neighborhood: [(i8, i8); 8] = [(-1, -1), (-1, 0), (-1, 1), (0, 1), (0, -1), (1, -1), (1, 0), (1, 1)]; 
-            let mut neighborhood: Vec<(i8, i8)> = Vec::new();
-            for x in -2..3 {
-                for y in -2..3 {
-                    if !(x == 0 && y == 0) {
-                        neighborhood.push((x, y));
-                    }
-                }
-            }
+            let neighborhood: [(i32, i32); 8] = [(-1, -1), (-1, 0), (-1, 1), (0, 1), (0, -1), (1, -1), (1, 0), (1, 1)]; 
+
+            // let mut neighborhood: Vec<(i32, i32)> = Vec::new();
+            // for x in -2..3 {
+            //     for y in -2..3 {
+            //         if !(x == 0 && y == 0) {
+            //             neighborhood.push((x, y));
+            //         }
+            //     }
+            // }
             for x in 0..w {
                 for y in 0..h {
                     let old_x = w as f64 / 2.0 + (x as f64 - w as f64 / 2.0) * self.scale_change;
                     let old_y = h as f64 / 2.0 + (y as f64 - h as f64 / 2.0) * self.scale_change; 
+                    let old_x = old_x.round() as i32;
+                    let old_y = old_y.round() as i32;
+                    if (!in_range(old_x, 0, w as i32)) || (!in_range(old_y, 0, h as i32)) { continue; }
+                    
                     // if some cell around the old position is outside the fractal we should
                     // render, ohterwise we can safely write the new point as inside the fractal
-                    let mut has_neighbor_outside = false; 
+                    // let mut has_neighbor_outside = false; 
+                    // for cell in neighborhood.iter() {
+                    //     let coords = (cell.0 + old_x as i8, cell.1 + old_y as i8);
+                    //     if 0 <= coords.0 && coords.0 < w as i8 && 0 <= coords.1 && coords.1 < h as i8 {
+                    //         if let Some(' ') = self.buffer.get(coords.0 as u16, coords.1 as u16)? {
+                    //             has_neighbor_outside = true;
+                    //             break;
+                    //         }
+                    //     } else {has_neighbor_outside = true; break;}
+                    // }
+
+                    // if !has_neighbor_outside {
+                    //     buff.put(self.buffer.get(old_x as u16, old_y as u16)?, x, y)?;
+                    // }
+                    // // asdfdddddddddddddddddddddddddddd
+                    let mut surely_in_fractal = true;
+                    let mut surely_outside_fractal = true;
                     for cell in neighborhood.iter() {
-                        let coords = (cell.0 + old_x as i8, cell.1 + old_y as i8);
-                        if 0 <= coords.0 && coords.0 < w as i8 && 0 <= coords.1 && coords.1 < h as i8 {
-                            if let Some(' ') = self.buffer.get(coords.0 as u16, coords.1 as u16)? {
-                                has_neighbor_outside = true;
+                        let coords = (cell.0 + old_x, cell.1 + old_y);
+                        if in_range(coords.0, 0, w as i32) && in_range(coords.1, 0, h as i32) {
+                            match self.buffer.get(coords.0 as u16, coords.1 as u16)? {
+                                Some('*') => { // cannot be sure it is outside of fractal
+                                    surely_outside_fractal = false;
+                                },
+                                Some(' ') => {
+                                    surely_in_fractal = false;
+                                }, 
+                                _ => {}
+                            }
+                            if (!surely_in_fractal) && (!surely_outside_fractal) {
                                 break;
                             }
-                        } else {has_neighbor_outside = true; break;}
+                        }
                     }
-
-                    if !has_neighbor_outside {
-                        buff.put(self.buffer.get(old_x as u16, old_y as u16)?, x, y)?;
+                    if surely_outside_fractal {
+                        buff.put(Some(' '), x, y)?;
+                    } else if surely_in_fractal {
+                        buff.put(Some('*'), x, y)?;
                     }
                 }
             } 
