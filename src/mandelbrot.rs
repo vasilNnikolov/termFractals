@@ -24,7 +24,9 @@ fn render_mandelbrot_pixel(screen: &mut term_io::Screen, x: u16, y: u16) -> Resu
     let mut z = Complex::new(0.0, 0.0); 
     let c = screen.get_complex_coords(x, y)?;
     let mut z_norm;
-    for i in 0..100 {
+    let n_iter = 100.0*(1.0 - 0.1*screen.scale.log10());
+
+    for i in 0..std::cmp::max(n_iter as i32, 500) {
         z = z*z + c; 
         z_norm = z.norm_sqr(); 
         if z_norm > 4.0 {
