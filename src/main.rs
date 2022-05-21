@@ -34,10 +34,10 @@ fn run() -> Result<(), &'static str>{
                 None => continue,
                 Some('q') => {should_end_program = true; break;}, 
                 // movement controlls
-                Some('h') => {screen.on_move(Direction::Left)?; break;}
-                Some('j') => {screen.on_move(Direction::Down)?; break;}
-                Some('k') => {screen.on_move(Direction::Up)?; break;}
-                Some('l') => {screen.on_move(Direction::Right)?; break;}
+                Some('l') => {screen.on_move(Direction::Left)?; break;}
+                Some('k') => {screen.on_move(Direction::Down)?; break;}
+                Some('j') => {screen.on_move(Direction::Up)?; break;}
+                Some('h') => {screen.on_move(Direction::Right)?; break;}
                 // zoom control
                 Some('x') => {screen.on_zoom(zoom_out)?; break;}
                 Some('z') => {screen.on_zoom(zoom_in)?; break;}
