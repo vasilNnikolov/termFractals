@@ -3,7 +3,6 @@
 use std::thread;
 use std::time::Duration;
 
-
 mod user_input;
 mod term_io;
 mod cyclic_buffer;
