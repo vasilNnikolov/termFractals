@@ -38,7 +38,7 @@ fn run() -> Result<(), &'static str>{
                 Some('l') => {screen.on_move(Direction::Right)?; break;}
                 // zoom control
                 // Some('z') => {screen.scale *= zoom_speed; break;}
-                // Some('x') => {screen.scale /= zoom_speed; break;}
+                Some('x') => {screen.on_zoom(1.2)?; break;}
                 _ => {}
             }
         }

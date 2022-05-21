@@ -2,7 +2,7 @@ pub struct Buffer<T> where
     T: Copy
 {
     pub size: (u16, u16), // width, height,
-    pointers: (u16, u16), // col pointer and row pointer
+    pub pointers: (u16, u16), // col pointer and row pointer
     contents: Vec<Vec<T>>,
 }
 

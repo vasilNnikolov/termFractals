@@ -11,6 +11,7 @@ pub struct Screen {
     pub stdout: termion::raw::RawTerminal<std::io::Stdout>, 
     pub term_size: (u16, u16), 
     pub scale: f64, 
+    scale_change: f64, // how much the scale has changed since the last zoom
     pub center: Complex<f64>,
     pub buffer: Buffer<Option<char>>,
     vertical_scaling_constant: f64
@@ -28,6 +29,7 @@ pub fn setup_terminal() -> Screen {
         stdout: stdout,
         term_size: (w, h),
         scale: 0.02, 
+        scale_change: 1.0,
         center: Complex::new(0.0, 0.0),
         buffer: buffer, 
         vertical_scaling_constant: 2.0
@@ -99,6 +101,51 @@ impl Screen {
             },
         }
         Ok(())
+    }
+    pub fn on_zoom(&mut self, zoom_amount: f64) -> Result<(), &'static str> { // if zoom_amount > 1 => zoom in, else => zoom out
+        if zoom_amount > 1.0 { //zoom in 
+            self.zoom_in(zoom_amount)?;
+        } else {
+            self.zoom_out(zoom_amount)?;
+        }
+        Ok(())
+    }
+    fn zoom_in(&mut self, zoom_amount: f64) -> Result<(), &'static str> {
+        //define new buffer of None values
+        self.scale_change /= zoom_amount;
+        // check if with this scale change you have to modify the screen 
+        if (1.0 - self.scale_change)*(std::cmp::max(self.term_size.0, self.term_size.1) as f64) > 2.0 {
+            // we need to make a change
+            let (w, h) = self.term_size;
+            let mut buff: Buffer<Option<char>> = Buffer::new((w, h), None); 
+            buff.pointers = self.buffer.pointers;
+            for x in 0..w {
+                for y in 0..h {
+                    let new_x = w as f64 / 2.0 + (x as f64 - w as f64 / 2.0) / self.scale_change;
+                    let new_y = h as f64 / 2.0 + (y as f64 - h as f64 / 2.0)/self.scale_change; 
+                    let rounded_x = new_x.round() as i32;
+                    let rounded_y = new_y.round() as i32;
+                    if 0 <= rounded_x && rounded_x < w as i32 && 0 <= rounded_y && rounded_y < h as i32 {
+                        // let new_x = new_x as u16;
+                        // let new_y = new_y as u16;
+                        
+                        let abs_difference_x: f64 = (new_x - rounded_x as f64).abs();
+                        let abs_difference_y: f64 = (new_y - rounded_y as f64).abs();
+                        if abs_difference_y < 0.4 && abs_difference_x < 0.4 {
+                            buff.put(self.buffer.get(x, y)?, rounded_x as u16, rounded_y as u16)?;                
+                        }
+                    } 
+                }
+            } 
+            self.buffer = buff;
+            self.scale *= self.scale_change;
+            self.scale_change = 1.0;
+        }
+        Ok(()) 
+    }
+
+    fn zoom_out(&mut self, zoom_amount: f64) -> Result<(), &'static str> {
+        Ok(()) 
     }
 }
 
