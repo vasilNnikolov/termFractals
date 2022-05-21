@@ -2,8 +2,8 @@ extern crate num;
 use num::complex::Complex;
 
 use crate::term_io;
-// pub const IN_FRACTAL: char = '*';
-// pub const OUTSIDE_FRACTAL: char = '*';
+pub const IN_FRACTAL: char = '*';
+pub const OUTSIDE_FRACTAL: char = ' ';
 
 pub fn render_whole_mandelbrot(screen: &mut term_io::Screen) -> Result<(), &'static str> {
     let (w, h) = screen.term_size;
@@ -40,9 +40,9 @@ fn render_mandelbrot_pixel(screen: &mut term_io::Screen, x: u16, y: u16) -> Resu
         }
     }
     if in_set {
-        screen.putchar(x, y, Some('*'))?;
+        screen.putchar(x, y, Some(IN_FRACTAL))?;
     } else {
-        screen.putchar(x, y, Some(' '))?;
+        screen.putchar(x, y, Some(OUTSIDE_FRACTAL))?;
     }
     Ok(())
 }
