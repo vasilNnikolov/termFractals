@@ -49,9 +49,7 @@ fn run() -> Result<(), &'static str>{
         if should_end_program {
             break;
         }
-
         thread::sleep(Duration::from_millis(50));
-        
         screen.flush_screen()?;
     }
     screen.clear_screen()?;
