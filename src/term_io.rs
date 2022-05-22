@@ -12,6 +12,12 @@ T: PartialOrd
 {
     return lower <= x && x < upper;
 }
+#[derive(Copy, Clone)]
+pub enum Pixel where 
+{
+    Recompute, // a render value means we have to re-compute the pixel
+    Value(char) // means we have a correct value in the buffer, no need to re-compute it
+}
 
 pub struct Screen {
     pub stdin: termion::AsyncReader, 
@@ -20,7 +26,7 @@ pub struct Screen {
     pub scale: f64, 
     scale_change: f64, // how much the scale has changed since the last zoom
     pub center: Complex<f64>,
-    pub buffer: Buffer<Option<char>>,
+    pub buffer: Buffer<Pixel>,
     vertical_scaling_constant: f64
 }
 
@@ -29,7 +35,7 @@ pub fn setup_terminal() -> Screen {
     let stdout = stdout.into_raw_mode().unwrap();
     let stdin = async_stdin();
     let (w, h) = termion::terminal_size().unwrap();
-    let buffer: Buffer<Option<char>> = Buffer::new((w, h), None);
+    let buffer: Buffer<Pixel> = Buffer::new((w, h), Pixel::Recompute);
 
     Screen {
         stdin: stdin, 
@@ -63,7 +69,7 @@ impl Screen {
         }
         Ok(())
     }
-    pub fn putchar(&mut self, x: u16, y: u16, c: Option<char>) -> Result<(), &'static str>{
+    pub fn putchar(&mut self, x: u16, y: u16, c: Pixel) -> Result<(), &'static str>{
         self.buffer.put(c, x, y)?;
         Ok(())
     }
@@ -77,22 +83,24 @@ impl Screen {
         for x in 0..self.term_size.0 {
             for y in 0..self.term_size.1 {
                 let c = self.buffer.get(x, y)?;
-                if let None = c {
-                    return Err("cannot render screen with None pixels");
-                }
-                let res = write!(self.stdout,
-                       "{}{}",
-                       termion::cursor::Goto(x + 1, y + 1), 
-                       c.unwrap());
-                if let Err(_e) = res {
-                    return Err("could not write to screen during render");
+                match self.buffer.get(x, y)? {
+                    Pixel::Recompute => {return Err("cannot render screen where some pixels are not computed");},
+                    Pixel::Value(c) => {
+                        let res = write!(self.stdout,
+                               "{}{}",
+                               termion::cursor::Goto(x + 1, y + 1), 
+                               c);
+                        if let Err(_e) = res {
+                            return Err("could not write to screen during render");
+                        }
+                    }
                 }
             }
         } 
         Ok(())
     }
     pub fn on_move(&mut self, direction: Direction, times: u16) -> Result<(), &'static str>{
-        self.buffer.shift(direction, times, None)?;
+        self.buffer.shift(direction, times, Pixel::Recompute)?;
         match direction {
             Direction::Right => {
                 self.center += times as f64*Complex::new(-self.scale, 0.0);
@@ -114,7 +122,7 @@ impl Screen {
         // check if with this scale change you have to modify the screen 
         if (1.0 - self.scale_change).abs()*(std::cmp::max(self.term_size.0, self.term_size.1) as f64) > 2.0 {
             let (w, h) = self.term_size;
-            let mut buff: Buffer<Option<char>> = Buffer::new((w, h), None); 
+            let mut buff: Buffer<Pixel> = Buffer::new((w, h), Pixel::Recompute); 
             buff.pointers = self.buffer.pointers;
             let neighborhood: [(i32, i32); 8] = [(-1, -1), (-1, 0), (-1, 1), (0, 1), (0, -1), (1, -1), (1, 0), (1, 1)]; 
 
@@ -133,13 +141,13 @@ impl Screen {
                         let coords = (cell.0 + old_x, cell.1 + old_y);
                         if in_range(coords.0, 0, w as i32) && in_range(coords.1, 0, h as i32) {
                             match self.buffer.get(coords.0 as u16, coords.1 as u16)? {
-                                Some(mandelbrot::IN_FRACTAL) => { // cannot be sure it is outside of fractal
+                                Pixel::Value(mandelbrot::IN_FRACTAL) => { // cannot be sure it is outside of fractal
                                     surely_outside_fractal = false;
                                 },
-                                Some(mandelbrot::OUTSIDE_FRACTAL) => {
+                                Pixel::Value(mandelbrot::OUTSIDE_FRACTAL) => {
                                     surely_in_fractal = false;
                                 }, 
-                                _ => {}
+                                _ => {return Err("there was an unrendered pixel on the screen somehow");}
                             }
                             if (!surely_in_fractal) && (!surely_outside_fractal) {
                                 break;
@@ -147,9 +155,9 @@ impl Screen {
                         }
                     }
                     if surely_outside_fractal {
-                        buff.put(Some(mandelbrot::OUTSIDE_FRACTAL), x, y)?;
+                        buff.put(Pixel::Value(mandelbrot::OUTSIDE_FRACTAL), x, y)?;
                     } else if surely_in_fractal {
-                        buff.put(Some(mandelbrot::IN_FRACTAL), x, y)?;
+                        buff.put(Pixel::Value(mandelbrot::IN_FRACTAL), x, y)?;
                     }
                 }
             } 

@@ -9,7 +9,7 @@ pub fn render_whole_mandelbrot(screen: &mut term_io::Screen) -> Result<(), &'sta
     let (w, h) = screen.term_size;
     for x in 0..w {
         for y in 0..h {
-            if let None = screen.buffer.get(x, y)? {
+            if let term_io::Pixel::Recompute = screen.buffer.get(x, y)? {
                 render_mandelbrot_pixel(screen, x, y)?;
             } 
         }
@@ -40,9 +40,9 @@ fn render_mandelbrot_pixel(screen: &mut term_io::Screen, x: u16, y: u16) -> Resu
         }
     }
     if in_set {
-        screen.putchar(x, y, Some(IN_FRACTAL))?;
+        screen.putchar(x, y, term_io::Pixel::Value(IN_FRACTAL))?;
     } else {
-        screen.putchar(x, y, Some(OUTSIDE_FRACTAL))?;
+        screen.putchar(x, y, term_io::Pixel::Value(OUTSIDE_FRACTAL))?;
     }
     Ok(())
 }
