@@ -74,7 +74,7 @@ impl Screen {
         Ok(())
     }
     pub fn flush_screen(&mut self) -> Result<(), &'static str> {
-        if let Err(e) = self.stdout.flush() {
+        if let Err(_e) = self.stdout.flush() {
             return Err("could not flush screen");
         }
         Ok(())
@@ -82,7 +82,6 @@ impl Screen {
     pub fn render(&mut self) -> Result<(), &'static str> {
         for x in 0..self.term_size.0 {
             for y in 0..self.term_size.1 {
-                let c = self.buffer.get(x, y)?;
                 match self.buffer.get(x, y)? {
                     Pixel::Recompute => {return Err("cannot render screen where some pixels are not computed");},
                     Pixel::Value(c) => {
