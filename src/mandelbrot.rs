@@ -12,6 +12,10 @@ struct PixelWithCoords {
     value: term_io::Pixel
 }
 
+fn get_iterations(scale: f64) -> u16 {
+    return std::cmp::max(200*(1.0 - 0.8*scale.log10()) as i32, 1000) as u16;
+}
+
 pub fn render_whole_mandelbrot(screen: &mut term_io::Screen) -> Result<(), &'static str> {
     let (w, h) = screen.term_size;
     let mut coords_to_draw: Vec<(Complex<f64>, (u16, u16))> = Vec::new();
@@ -42,13 +46,14 @@ pub fn render_whole_mandelbrot(screen: &mut term_io::Screen) -> Result<(), &'sta
 
     let (tx, rx) = mpsc::channel::<PixelWithCoords>();
 
+    let n_iter = get_iterations(screen.scale); 
     for coord_bunch in bunches {
         let local_tx = tx.clone();
         thread::spawn(move || {
             for c in coord_bunch {
                 local_tx.send(PixelWithCoords {
                     coords: c.1, 
-                    value: term_io::Pixel::Value(if compute_mandelbrot_pixel(c.0, 100) {IN_FRACTAL} else {OUTSIDE_FRACTAL})
+                    value: term_io::Pixel::Value(if compute_mandelbrot_pixel(c.0, n_iter) {IN_FRACTAL} else {OUTSIDE_FRACTAL})
                 }).unwrap();
             } 
         });
