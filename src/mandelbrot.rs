@@ -24,21 +24,26 @@ pub fn render_whole_mandelbrot(screen: &mut term_io::Screen) -> Result<(), &'sta
     }
 
     let n_threads = 10;
-    let chunk_size = coords_to_draw.len()/n_threads as usize;
+    let chunk_size = (coords_to_draw.len()/n_threads) as usize;
 
     let mut bunches = Vec::new();
-    for i in 0..coords_to_draw.len() {
+    let mut i = 0;
+    while i < coords_to_draw.len() {
         let mut bunch = Vec::new();
-        while (i < coords_to_draw.len() - 1) && bunch.len() < chunk_size {
-            bunch.push(coords_to_draw[i]);
+        for j in 0..chunk_size {
+            if i + j < coords_to_draw.len() {
+                bunch.push(coords_to_draw[i+j]);
+            } else { break; }
         }
+        i += bunch.len();
         bunches.push(bunch);
+
     }
 
     let (tx, rx) = mpsc::channel::<PixelWithCoords>();
     let mut handles = Vec::new();
 
-    for coord_bunch in bunches{
+    for coord_bunch in bunches {
         let local_tx = tx.clone();
         let handle = thread::spawn(move || {
             for c in coord_bunch {
@@ -65,7 +70,7 @@ pub fn render_whole_mandelbrot(screen: &mut term_io::Screen) -> Result<(), &'sta
         }
     }
 
-    screen.flush_screen()?;
+    // screen.flush_screen()?;
     Ok(())
 }
 

@@ -14,6 +14,24 @@ fn main() {
     if let Err(e) = run() {
         println!("main exited with error: {}", e);
     }
+    // let v0 = vec![1, 2, 3, 4, 5, 6, 7, 8];
+    // let n = 3;
+    // let chunk_size = (v0.len()/n) as usize;
+
+    // let mut bunches = Vec::new();
+    // let mut i = 0;
+    // while i < v0.len() {
+    //     let mut bunch = Vec::new();
+    //     for j in 0..chunk_size {
+    //         if i + j < v0.len() {
+    //             bunch.push(v0[i+j]);
+    //         } else { break; }
+    //     }
+    //     i += bunch.len();
+    //     bunches.push(bunch);
+
+    // }
+    // println!("{:?}", bunches);
 }
 
 fn run() -> Result<(), &'static str>{
