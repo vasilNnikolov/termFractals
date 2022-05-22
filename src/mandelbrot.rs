@@ -32,16 +32,16 @@ pub fn render_whole_mandelbrot(screen: &mut term_io::Screen) -> Result<(), &'sta
 
     let mut bunches = Vec::new();
     let mut i = 0;
+    let mut j = 0;
     while i < coords_to_draw.len() {
         let mut bunch = Vec::new();
-        for j in 0..chunk_size {
-            if i + j < coords_to_draw.len() {
-                bunch.push(coords_to_draw[i+j]);
-            } else { break; }
+        while j + i < coords_to_draw.len() && j < chunk_size {
+            bunch.push(coords_to_draw[j+i]);
+            j += 1;
         }
         i += bunch.len();
+        j = 0;
         bunches.push(bunch);
-
     }
 
     let (tx, rx) = mpsc::channel::<PixelWithCoords>();
@@ -89,31 +89,3 @@ fn compute_mandelbrot_pixel(c: Complex<f64>, n_iter: u16) -> bool { // returns t
     return in_set;
 }
 
-fn render_mandelbrot_pixel(screen: &mut term_io::Screen, x: u16, y: u16) -> Result<(), &'static str> {
-    if x >= screen.term_size.0 || y >= screen.term_size.1 {
-        return Err("cannot render pixel outside of screen");
-    }
-    let mut in_set = true;
-    let mut z = Complex::new(0.0, 0.0); 
-    let c = screen.get_complex_coords(x, y)?;
-    let mut z_norm;
-    let n_iter = 100.0*(1.0 - 0.1*screen.scale.log10());
-
-    for _i in 0..std::cmp::max(n_iter as i32, 500) {
-        z = z*z + c; 
-        z_norm = z.norm_sqr(); 
-        if z_norm > 4.0 {
-            in_set = false;
-            break;
-        }
-        else if z_norm < 0.01 {
-            break;
-        }
-    }
-    if in_set {
-        screen.putchar(x, y, term_io::Pixel::Value(IN_FRACTAL))?;
-    } else {
-        screen.putchar(x, y, term_io::Pixel::Value(OUTSIDE_FRACTAL))?;
-    }
-    Ok(())
-}
