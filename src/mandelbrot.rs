@@ -41,11 +41,10 @@ pub fn render_whole_mandelbrot(screen: &mut term_io::Screen) -> Result<(), &'sta
     }
 
     let (tx, rx) = mpsc::channel::<PixelWithCoords>();
-    let mut handles = Vec::new();
 
     for coord_bunch in bunches {
         let local_tx = tx.clone();
-        let handle = thread::spawn(move || {
+        thread::spawn(move || {
             for c in coord_bunch {
                 local_tx.send(PixelWithCoords {
                     coords: c.1, 
@@ -53,13 +52,6 @@ pub fn render_whole_mandelbrot(screen: &mut term_io::Screen) -> Result<(), &'sta
                 }).unwrap();
             } 
         });
-        handles.push(handle);
-    }
-
-    for h in handles {
-        if let Err(_e) = h.join() {
-            return Err("could not join one of the threads");
-        }
     }
 
     for _i in 0..coords_to_draw.len() {
@@ -70,7 +62,6 @@ pub fn render_whole_mandelbrot(screen: &mut term_io::Screen) -> Result<(), &'sta
         }
     }
 
-    // screen.flush_screen()?;
     Ok(())
 }
 
