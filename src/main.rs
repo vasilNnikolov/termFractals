@@ -7,6 +7,7 @@ mod user_input;
 mod term_io;
 mod cyclic_buffer;
 mod mandelbrot;
+mod stat_bar;
 
 use cyclic_buffer::Direction;
 
@@ -28,7 +29,10 @@ fn run() -> Result<(), &'static str>{
     let move_speed = std::cmp::max(1, move_speed as u16); 
     loop {
         screen.clear_screen()?;
+
         mandelbrot::render_whole_mandelbrot(&mut screen)?;
+        // render the status bar
+        stat_bar::render_status_bar(&mut screen, 0)?;
         screen.render()?;
         loop {
             let c = user_input::get_char(&mut screen);

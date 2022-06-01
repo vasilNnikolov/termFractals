@@ -12,6 +12,7 @@ T: PartialOrd
 {
     return lower <= x && x < upper;
 }
+
 #[derive(Copy, Clone)]
 pub enum Pixel where 
 {
