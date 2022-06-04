@@ -6,18 +6,35 @@ pub fn render_status_bar(screen: &mut term_io::Screen, fps: u16) -> Result<(), &
     let scale_str = String::from(format!("Scale (log10): {}", -screen.scale.log10()));
     let position_string = String::from(format!("Position: {:.7} + i*{:.7}", screen.center.re, screen.center.im));
 
-    let strings_to_render = vec![
-        scale_str, 
-        position_string,
-    ];
+    // let strings_to_render = vec![
+    //     scale_str, 
+    //     position_string,
+    // ];
+    let mut strings_to_render = Vec::new();
+    strings_to_render.push(scale_str);
+    strings_to_render.push(position_string);
+
 
     let max_width = strings_to_render.iter().map(|string: &String| string.len()).max().unwrap();
-    for x in 0..max_width {
+    let height = strings_to_render.len();
+    // horisontal bars
+    for x in 1..max_width + 1 {
         screen.putchar(x as u16, 0, term_io::Pixel::StatBar('-'))?;
+        screen.putchar(x as u16, (height + 1) as u16, term_io::Pixel::StatBar('-'))?;
     }
-    for x in 0..max_width {
-        screen.putchar(x as u16, (strings_to_render.len() + 2) as u16, term_io::Pixel::StatBar('-'))?;
+    // vertical bars
+    for y in 1..height + 1 {
+        screen.putchar(0, y as u16, term_io::Pixel::StatBar('|'))?;
+        screen.putchar((max_width + 1) as u16, y as u16, term_io::Pixel::StatBar('|'))?;
     }
+    // rows of text
+    for index in 0..strings_to_render.len() {
+        for x in 0..strings_to_render[index].len() {
+            screen.putchar((x + 1) as u16, (index + 1) as u16, term_io::Pixel::StatBar(strings_to_render[index].chars().nth(x).unwrap()))?;
+        }
+    }
+    
+
 
     Ok(())
 }
