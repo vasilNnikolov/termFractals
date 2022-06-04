@@ -1,19 +1,23 @@
 use crate::term_io;
 
-pub fn render_status_bar(screen: &mut term_io::Screen, fps: u16) -> Result<(), &'static str> {
+pub fn render_status_bar(screen: &mut term_io::Screen, fps: u16, n_iter: u16) -> Result<(), &'static str> {
     // should indicate the current scale, position, fps eventually
     // stat bar is a box in the top left
     let scale_str = String::from(format!("Scale (log10): {}", -screen.scale.log10()));
     let position_string = String::from(format!("Position: {:.7} + i*{:.7}", screen.center.re, screen.center.im));
+    let iteration_string = String::from(format!("Number of iterations: {}", n_iter));
+    let fps_string = String::from(format!("FPS: {}", fps));
 
     // let strings_to_render = vec![
     //     scale_str, 
     //     position_string,
     // ];
-    let mut strings_to_render = Vec::new();
-    strings_to_render.push(scale_str);
-    strings_to_render.push(position_string);
-
+    let mut strings_to_render = vec![
+        scale_str, 
+        position_string,
+        iteration_string, 
+        fps_string,
+    ];
 
     let max_width = strings_to_render.iter().map(|string: &String| string.len()).max().unwrap();
     let height = strings_to_render.len();

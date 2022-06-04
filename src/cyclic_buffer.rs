@@ -24,6 +24,16 @@ T: Copy
             contents: contents,
         }
     }
+
+    pub fn clear(&mut self, item: T) {
+        for y in 0..self.size.1 {
+            for x in 0..self.size.0 {
+                if let Err(_) = self.put(item, x, y) {
+                    panic!("Could not clear screen");
+                }
+            }
+        }
+    }
     pub fn get(&self, x: u16, y: u16) -> Result<T, &'static str> {
         if x < self.size.0 && y < self.size.1 {
             let new_x = (x + self.pointers.0) % self.size.0;

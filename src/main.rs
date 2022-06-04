@@ -27,13 +27,15 @@ fn run() -> Result<(), &'static str>{
     let zoom_out = 1.0/zoom_in;
     let move_speed = 2.0*screen.term_size.0 as f64 / 100.0;
     let move_speed = std::cmp::max(1, move_speed as u16); 
+    let mut n_iter_additive: i32 = 0;
     loop {
         screen.clear_screen()?;
         // render the status bar
         stat_bar::clear_stat_bar(&mut screen)?;
-        stat_bar::render_status_bar(&mut screen, 0)?;
+        let n_iter: i32 = std::cmp::max(200*(1.0 - 0.8*screen.scale.log10()) as i32, mandelbrot::MIN_ITER) + n_iter_additive;
+        stat_bar::render_status_bar(&mut screen, 0, n_iter as u16)?;
 
-        mandelbrot::render_whole_mandelbrot(&mut screen)?;
+        mandelbrot::render_whole_mandelbrot(&mut screen, n_iter as u16)?;
         screen.render()?;
         loop {
             let c = user_input::get_char(&mut screen);
@@ -48,6 +50,19 @@ fn run() -> Result<(), &'static str>{
                 // zoom control
                 Some('x') => {screen.on_zoom(zoom_out)?; break;}
                 Some('z') => {screen.on_zoom(zoom_in)?; break;}
+                // iteration control
+                // Some('n') => {
+                //     n_iter_additive += 10; 
+                //     screen.buffer.clear(term_io::Pixel::Recompute);
+                //     break;
+                // }, 
+                // Some('m') => {
+                //     if n_iter - 10 > mandelbrot::MIN_ITER {
+                //         n_iter_additive -= 10;
+                //         screen.buffer.clear(term_io::Pixel::Recompute);
+                //     }
+                //     break;
+                // }, 
                 _ => {}
             }
         }
