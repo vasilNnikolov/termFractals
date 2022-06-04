@@ -13,8 +13,23 @@ pub fn render_status_bar(screen: &mut term_io::Screen, fps: u16) -> Result<(), &
 
     let max_width = strings_to_render.iter().map(|string: &String| string.len()).max().unwrap();
     for x in 0..max_width {
-        screen.putchar(x as u16, 0, term_io::Pixel::Value('-'))?;
+        screen.putchar(x as u16, 0, term_io::Pixel::StatBar('-'))?;
+    }
+    for x in 0..max_width {
+        screen.putchar(x as u16, (strings_to_render.len() + 2) as u16, term_io::Pixel::StatBar('-'))?;
     }
 
+    Ok(())
+}
+
+pub fn clear_stat_bar(screen: &mut term_io::Screen) -> Result<(), &'static str> {
+    let (w, h) = screen.buffer.size;
+    for x in 0..w {
+        for y in 0..h {
+            if let term_io::Pixel::StatBar(_) = screen.buffer.get(x, y)? {
+                screen.buffer.put(term_io::Pixel::Recompute, x, y)?;
+            }
+        }
+    }
     Ok(())
 }

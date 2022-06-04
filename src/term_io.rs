@@ -17,7 +17,8 @@ T: PartialOrd
 pub enum Pixel where 
 {
     Recompute, // a render value means we have to re-compute the pixel
-    Value(char) // means we have a correct value in the buffer, no need to re-compute it
+    Value(char), // means we have a correct value in the buffer, no need to re-compute it
+    StatBar(char) // means it is part of the status bar, and should be re-rendered after moving
 }
 
 pub struct Screen {
@@ -85,7 +86,7 @@ impl Screen {
             for y in 0..self.term_size.1 {
                 match self.buffer.get(x, y)? {
                     Pixel::Recompute => {return Err("cannot render screen where some pixels are not computed");},
-                    Pixel::Value(c) => {
+                    Pixel::Value(c) | Pixel::StatBar(c) => {
                         let res = write!(self.stdout,
                                "{}{}",
                                termion::cursor::Goto(x + 1, y + 1), 
@@ -147,6 +148,7 @@ impl Screen {
                                 Pixel::Value(mandelbrot::OUTSIDE_FRACTAL) => {
                                     surely_in_fractal = false;
                                 }, 
+                                Pixel::StatBar(_) => {},
                                 _ => {return Err("there was an unrendered pixel on the screen somehow");}
                             }
                             if (!surely_in_fractal) && (!surely_outside_fractal) {

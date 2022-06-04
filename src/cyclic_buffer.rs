@@ -1,5 +1,5 @@
 pub struct Buffer<T> where 
-    T: Copy
+T: Copy
 {
     pub size: (u16, u16), // width, height,
     pub pointers: (u16, u16), // col pointer and row pointer
@@ -7,7 +7,7 @@ pub struct Buffer<T> where
 }
 
 impl<T> Buffer<T> where
-    T: Copy 
+T: Copy 
 {
     pub fn new(size: (u16, u16), starting_item: T) -> Buffer<T> {
         let mut contents: Vec<Vec<T>> = Vec::new();

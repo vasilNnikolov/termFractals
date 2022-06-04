@@ -29,10 +29,11 @@ fn run() -> Result<(), &'static str>{
     let move_speed = std::cmp::max(1, move_speed as u16); 
     loop {
         screen.clear_screen()?;
+        // render the status bar
+        stat_bar::clear_stat_bar(&mut screen)?;
+        stat_bar::render_status_bar(&mut screen, 0)?;
 
         mandelbrot::render_whole_mandelbrot(&mut screen)?;
-        // render the status bar
-        stat_bar::render_status_bar(&mut screen, 0)?;
         screen.render()?;
         loop {
             let c = user_input::get_char(&mut screen);
