@@ -29,15 +29,17 @@ fn run() -> Result<(), &'static str> {
     let move_speed = 2.0*screen.term_size.0 as f64 / 100.0;
     let move_speed = std::cmp::max(1, move_speed as u16); 
     let mut n_iter_additive: i32 = 0;
+    let mut n_iter_step_size: u16;
     loop {
         screen.clear_screen()?;
         // render the status bar
         stat_bar::clear_stat_bar(&mut screen)?;
-        let n_iter: i32 = std::cmp::max((200.0 - 100.0*screen.scale.log10()) as i32 + n_iter_additive, mandelbrot::MIN_ITER) ;
-        stat_bar::render_status_bar(&mut screen, 0, n_iter as u16)?;
+        let n_iter: i32 = std::cmp::max((200*(1 - (0.5*screen.scale.log10()) as i32)) as i32 + n_iter_additive, mandelbrot::MIN_ITER) ;
+        stat_bar::render_status_bar(&mut screen, n_iter as u16)?;
 
         mandelbrot::render_whole_mandelbrot(&mut screen, n_iter as u16)?;
         screen.render()?;
+        n_iter_step_size = std::cmp::max(-2*screen.scale.log10() as i32, 1) as u16;
         loop {
             let c = async_input::get_char(&mut screen);
             match c {
@@ -53,13 +55,13 @@ fn run() -> Result<(), &'static str> {
                 Some('z') => {screen.on_zoom(zoom_in)?; break;}
                 // iteration control
                 Some('n') => {
-                    n_iter_additive += 5; 
+                    n_iter_additive += n_iter_step_size as i32; 
                     screen.buffer.clear(cyclic_buffer::Pixel::Recompute);
                     break;
                 }, 
                 Some('m') => {
-                    if n_iter - 5 > mandelbrot::MIN_ITER {
-                        n_iter_additive -= 5;
+                    if n_iter - n_iter_step_size as i32 > mandelbrot::MIN_ITER {
+                        n_iter_additive -= n_iter_step_size as i32;
                         screen.buffer.clear(cyclic_buffer::Pixel::Recompute);
                     }
                     break;
