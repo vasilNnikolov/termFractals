@@ -17,7 +17,7 @@ fn main() {
     }
 }
 
-fn run() -> Result<(), &'static str>{
+fn run() -> Result<(), &'static str> {
     let mut screen = term_io::setup_terminal();
     
     screen.clear_screen()?;
@@ -32,7 +32,7 @@ fn run() -> Result<(), &'static str>{
         screen.clear_screen()?;
         // render the status bar
         stat_bar::clear_stat_bar(&mut screen)?;
-        let n_iter: i32 = std::cmp::max(200*(1.0 - 0.8*screen.scale.log10()) as i32, mandelbrot::MIN_ITER) + n_iter_additive;
+        let n_iter: i32 = std::cmp::max((200.0 - 100.0*screen.scale.log10()) as i32 + n_iter_additive, mandelbrot::MIN_ITER) ;
         stat_bar::render_status_bar(&mut screen, 0, n_iter as u16)?;
 
         mandelbrot::render_whole_mandelbrot(&mut screen, n_iter as u16)?;
@@ -51,18 +51,18 @@ fn run() -> Result<(), &'static str>{
                 Some('x') => {screen.on_zoom(zoom_out)?; break;}
                 Some('z') => {screen.on_zoom(zoom_in)?; break;}
                 // iteration control
-                // Some('n') => {
-                //     n_iter_additive += 10; 
-                //     screen.buffer.clear(term_io::Pixel::Recompute);
-                //     break;
-                // }, 
-                // Some('m') => {
-                //     if n_iter - 10 > mandelbrot::MIN_ITER {
-                //         n_iter_additive -= 10;
-                //         screen.buffer.clear(term_io::Pixel::Recompute);
-                //     }
-                //     break;
-                // }, 
+                Some('n') => {
+                    n_iter_additive += 5; 
+                    screen.buffer.clear(term_io::Pixel::Recompute);
+                    break;
+                }, 
+                Some('m') => {
+                    if n_iter - 5 > mandelbrot::MIN_ITER {
+                        n_iter_additive -= 5;
+                        screen.buffer.clear(term_io::Pixel::Recompute);
+                    }
+                    break;
+                }, 
                 _ => {}
             }
         }

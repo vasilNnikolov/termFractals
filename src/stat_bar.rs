@@ -8,11 +8,7 @@ pub fn render_status_bar(screen: &mut term_io::Screen, fps: u16, n_iter: u16) ->
     let iteration_string = String::from(format!("Number of iterations: {}", n_iter));
     let fps_string = String::from(format!("FPS: {}", fps));
 
-    // let strings_to_render = vec![
-    //     scale_str, 
-    //     position_string,
-    // ];
-    let mut strings_to_render = vec![
+    let strings_to_render = vec![
         scale_str, 
         position_string,
         iteration_string, 
@@ -38,8 +34,6 @@ pub fn render_status_bar(screen: &mut term_io::Screen, fps: u16, n_iter: u16) ->
         }
     }
     
-
-
     Ok(())
 }
 

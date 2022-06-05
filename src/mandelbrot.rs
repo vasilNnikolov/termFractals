@@ -6,15 +6,11 @@ use std::thread;
 use crate::term_io;
 pub const IN_FRACTAL: char = '*';
 pub const OUTSIDE_FRACTAL: char = ' ';
-pub const MIN_ITER: i32 = 50;
+pub const MIN_ITER: i32 = 15;
 
 struct PixelWithCoords {
     coords: (u16, u16),
     value: term_io::Pixel
-}
-
-fn get_iterations(scale: f64) -> u16 {
-    return std::cmp::max(200*(1.0 - 0.8*scale.log10()) as i32, 1000) as u16;
 }
 
 pub fn render_whole_mandelbrot(screen: &mut term_io::Screen, n_iter: u16) -> Result<(), &'static str> {
