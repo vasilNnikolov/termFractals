@@ -4,21 +4,13 @@ use num::complex::Complex;
 use termion::raw::IntoRawMode;
 use termion::async_stdin;
 use std::io::{Write, stdout};
-use crate::cyclic_buffer::{Buffer, Direction};
+use crate::terminal::cyclic_buffer::{Buffer, Direction, Pixel};
 use crate::mandelbrot;
 
 fn in_range<T>(x: T, lower: T, upper: T) -> bool where 
 T: PartialOrd 
 {
     return lower <= x && x < upper;
-}
-
-#[derive(Copy, Clone)]
-pub enum Pixel where 
-{
-    Recompute, // a render value means we have to re-compute the pixel
-    Value(char), // means we have a correct value in the buffer, no need to re-compute it
-    StatBar(char) // means it is part of the status bar, and should be re-rendered after moving
 }
 
 pub struct Screen {
@@ -32,26 +24,25 @@ pub struct Screen {
     vertical_scaling_constant: f64
 }
 
-pub fn setup_terminal() -> Screen {
-    let stdout = stdout(); 
-    let stdout = stdout.into_raw_mode().unwrap();
-    let stdin = async_stdin();
-    let (w, h) = termion::terminal_size().unwrap();
-    let buffer: Buffer<Pixel> = Buffer::new((w, h), Pixel::Recompute);
-
-    Screen {
-        stdin: stdin, 
-        stdout: stdout,
-        term_size: (w, h),
-        scale: 0.02, 
-        scale_change: 1.0,
-        center: Complex::new(0.0, 0.0),
-        buffer: buffer, 
-        vertical_scaling_constant: 2.0
-    }
-}
-
 impl Screen {
+    pub fn new_screen() -> Screen {
+        let stdout = stdout(); 
+        let stdout = stdout.into_raw_mode().unwrap();
+        let stdin = async_stdin();
+        let (w, h) = termion::terminal_size().unwrap();
+        let buffer: Buffer<Pixel> = Buffer::new((w, h), Pixel::Recompute);
+
+        Screen {
+            stdin: stdin, 
+            stdout: stdout,
+            term_size: (w, h),
+            scale: 0.02, 
+            scale_change: 1.0,
+            center: Complex::new(0.0, 0.0),
+            buffer: buffer, 
+            vertical_scaling_constant: 2.0
+        }
+    }
     pub fn get_complex_coords(&self, x: u16, y: u16) -> Result<Complex<f64>, &'static str> {
         if x < self.term_size.0 && y < self.term_size.1 {
             let (w, h) = self.term_size;

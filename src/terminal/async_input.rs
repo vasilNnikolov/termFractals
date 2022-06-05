@@ -1,7 +1,7 @@
-use crate::term_io;
+use crate::terminal::screen;
 use std::io::Read;
 
-pub fn get_char(screen: &mut term_io::Screen) -> Option<char>{
+pub fn get_char(screen: &mut screen::Screen) -> Option<char>{
     let mut char_buffer: Vec<u8> = Vec::new();
     if let Err(_e) = screen.stdin.read_to_end(&mut char_buffer) {
         panic!("Error reading to stdin ")

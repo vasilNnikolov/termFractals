@@ -24,7 +24,6 @@ T: Copy
             contents: contents,
         }
     }
-
     pub fn clear(&mut self, item: T) {
         for y in 0..self.size.1 {
             for x in 0..self.size.0 {
@@ -107,6 +106,15 @@ T: Copy
         Ok(())
     }
 }
+
+#[derive(Copy, Clone)]
+pub enum Pixel where 
+{
+    Recompute, // a render value means we have to re-compute the pixel
+    Value(char), // means we have a correct value in the buffer, no need to re-compute it
+    StatBar(char) // means it is part of the status bar, and should be re-rendered after moving
+}
+
 
 #[derive(Copy, Clone)]
 pub enum Direction {

@@ -1,15 +1,17 @@
 
-// use std::io::Write;
 use std::thread;
 use std::time::Duration;
 
-mod user_input;
-mod term_io;
-mod cyclic_buffer;
+
+mod terminal;
+use terminal::{
+    screen, 
+    async_input, 
+    cyclic_buffer
+};
+use cyclic_buffer::Direction;
 mod mandelbrot;
 mod stat_bar;
-
-use cyclic_buffer::Direction;
 
 fn main() {
     if let Err(e) = run() {
@@ -18,7 +20,7 @@ fn main() {
 }
 
 fn run() -> Result<(), &'static str> {
-    let mut screen = term_io::setup_terminal();
+    let mut screen = screen::Screen::new_screen();
     
     screen.clear_screen()?;
 
@@ -38,7 +40,7 @@ fn run() -> Result<(), &'static str> {
         mandelbrot::render_whole_mandelbrot(&mut screen, n_iter as u16)?;
         screen.render()?;
         loop {
-            let c = user_input::get_char(&mut screen);
+            let c = async_input::get_char(&mut screen);
             match c {
                 None => continue,
                 Some('q') => {should_end_program = true; break;}, 
@@ -53,13 +55,13 @@ fn run() -> Result<(), &'static str> {
                 // iteration control
                 Some('n') => {
                     n_iter_additive += 5; 
-                    screen.buffer.clear(term_io::Pixel::Recompute);
+                    screen.buffer.clear(cyclic_buffer::Pixel::Recompute);
                     break;
                 }, 
                 Some('m') => {
                     if n_iter - 5 > mandelbrot::MIN_ITER {
                         n_iter_additive -= 5;
-                        screen.buffer.clear(term_io::Pixel::Recompute);
+                        screen.buffer.clear(cyclic_buffer::Pixel::Recompute);
                     }
                     break;
                 }, 

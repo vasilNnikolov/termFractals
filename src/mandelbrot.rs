@@ -3,22 +3,25 @@ use num::complex::Complex;
 use std::sync::mpsc;
 use std::thread;
 
-use crate::term_io;
+use crate::terminal::{
+    cyclic_buffer, 
+    screen
+};
 pub const IN_FRACTAL: char = '*';
 pub const OUTSIDE_FRACTAL: char = ' ';
 pub const MIN_ITER: i32 = 15;
 
 struct PixelWithCoords {
     coords: (u16, u16),
-    value: term_io::Pixel
+    value: cyclic_buffer::Pixel
 }
 
-pub fn render_whole_mandelbrot(screen: &mut term_io::Screen, n_iter: u16) -> Result<(), &'static str> {
+pub fn render_whole_mandelbrot(screen: &mut screen::Screen, n_iter: u16) -> Result<(), &'static str> {
     let (w, h) = screen.term_size;
     let mut coords_to_draw: Vec<(Complex<f64>, (u16, u16))> = Vec::new();
     for x in 0..w {
         for y in 0..h {
-            if let term_io::Pixel::Recompute = screen.buffer.get(x, y)? {
+            if let cyclic_buffer::Pixel::Recompute = screen.buffer.get(x, y)? {
                 coords_to_draw.push((screen.get_complex_coords(x, y)?, (x, y)));
             }
         }
@@ -49,7 +52,7 @@ pub fn render_whole_mandelbrot(screen: &mut term_io::Screen, n_iter: u16) -> Res
             for c in coord_bunch {
                 local_tx.send(PixelWithCoords {
                     coords: c.1, 
-                    value: term_io::Pixel::Value(if compute_mandelbrot_pixel(c.0, n_iter) {IN_FRACTAL} else {OUTSIDE_FRACTAL})
+                    value: cyclic_buffer::Pixel::Value(if compute_mandelbrot_pixel(c.0, n_iter) {IN_FRACTAL} else {OUTSIDE_FRACTAL})
                 }).unwrap();
             } 
         });
