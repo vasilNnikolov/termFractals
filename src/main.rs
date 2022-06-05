@@ -30,6 +30,7 @@ fn run() -> Result<(), &'static str> {
     let move_speed = std::cmp::max(1, move_speed as u16); 
     let mut n_iter_additive: i32 = 0;
     let mut n_iter_step_size: u16;
+    let mut last_action_was_zoom = false;
     loop {
         screen.clear_screen()?;
         // render the status bar
@@ -43,7 +44,13 @@ fn run() -> Result<(), &'static str> {
         loop {
             let c = async_input::get_char(&mut screen);
             match c {
-                None => continue,
+                None => { // if previous action was zoom, re-draw the screen
+                    if last_action_was_zoom {
+                        screen.buffer.clear(cyclic_buffer::Pixel::Recompute);
+                        last_action_was_zoom = false;
+                        break;
+                    }
+                },
                 Some('q') => {should_end_program = true; break;}, 
                 // movement controlls
                 Some('l') => {screen.on_move(Direction::Left, move_speed)?; break;}
@@ -51,8 +58,8 @@ fn run() -> Result<(), &'static str> {
                 Some('j') => {screen.on_move(Direction::Up, move_speed)?; break;}
                 Some('h') => {screen.on_move(Direction::Right, move_speed)?; break;}
                 // zoom control
-                Some('x') => {screen.on_zoom(zoom_out)?; break;}
-                Some('z') => {screen.on_zoom(zoom_in)?; break;}
+                Some('x') => {screen.on_zoom(zoom_out)?; last_action_was_zoom = true; break;}
+                Some('z') => {screen.on_zoom(zoom_in)?; last_action_was_zoom = true; break;}
                 // iteration control
                 Some('n') => {
                     n_iter_additive += n_iter_step_size as i32; 
