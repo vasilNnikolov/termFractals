@@ -3,20 +3,20 @@ use num::complex::Complex;
 use std::sync::mpsc;
 use std::thread;
 
-use crate::terminal::{
-    cyclic_buffer, 
-    screen
-};
+use crate::terminal::{cyclic_buffer, screen};
 pub const IN_FRACTAL: char = '*';
 pub const OUTSIDE_FRACTAL: char = ' ';
 pub const MIN_ITER: i32 = 15;
 
 struct PixelWithCoords {
     coords: (u16, u16),
-    value: cyclic_buffer::Pixel
+    value: cyclic_buffer::Pixel,
 }
 
-pub fn render_whole_mandelbrot(screen: &mut screen::Screen, n_iter: u16) -> Result<(), &'static str> {
+pub fn render_whole_mandelbrot(
+    screen: &mut screen::Screen,
+    n_iter: u16,
+) -> Result<(), &'static str> {
     let (w, h) = screen.term_size;
     let mut coords_to_draw: Vec<(Complex<f64>, (u16, u16))> = Vec::new();
     for x in 0..w {
@@ -28,7 +28,7 @@ pub fn render_whole_mandelbrot(screen: &mut screen::Screen, n_iter: u16) -> Resu
     }
 
     let n_threads = 10;
-    let chunk_size = (coords_to_draw.len()/n_threads) as usize;
+    let chunk_size = (coords_to_draw.len() / n_threads) as usize;
 
     let mut bunches = Vec::new();
     let mut i = 0;
@@ -36,7 +36,7 @@ pub fn render_whole_mandelbrot(screen: &mut screen::Screen, n_iter: u16) -> Resu
     while i < coords_to_draw.len() {
         let mut bunch = Vec::new();
         while j + i < coords_to_draw.len() && j < chunk_size {
-            bunch.push(coords_to_draw[j+i]);
+            bunch.push(coords_to_draw[j + i]);
             j += 1;
         }
         i += bunch.len();
@@ -50,41 +50,50 @@ pub fn render_whole_mandelbrot(screen: &mut screen::Screen, n_iter: u16) -> Resu
         let local_tx = tx.clone();
         thread::spawn(move || {
             for c in coord_bunch {
-                local_tx.send(PixelWithCoords {
-                    coords: c.1, 
-                    value: cyclic_buffer::Pixel::Value(if compute_mandelbrot_pixel(c.0, n_iter) {IN_FRACTAL} else {OUTSIDE_FRACTAL})
-                }).unwrap();
-            } 
+                local_tx
+                    .send(PixelWithCoords {
+                        coords: c.1,
+                        value: cyclic_buffer::Pixel::Value(
+                            if compute_mandelbrot_pixel(c.0, n_iter) {
+                                IN_FRACTAL
+                            } else {
+                                OUTSIDE_FRACTAL
+                            },
+                        ),
+                    })
+                    .unwrap();
+            }
         });
     }
 
     for _i in 0..coords_to_draw.len() {
         let pixel = rx.recv();
         match pixel {
-            Ok(px) => screen.putchar(px.coords.0, px.coords.1, px.value)?, 
-            Err(_e) => { return Err("could not recieve from reciever"); }
+            Ok(px) => screen.putchar(px.coords.0, px.coords.1, px.value)?,
+            Err(_e) => {
+                return Err("could not recieve from reciever");
+            }
         }
     }
 
     Ok(())
 }
 
-fn compute_mandelbrot_pixel(c: Complex<f64>, n_iter: u16) -> bool { // returns true if the pixel is in the set
+fn compute_mandelbrot_pixel(c: Complex<f64>, n_iter: u16) -> bool {
+    // returns true if the pixel is in the set
     let mut in_set = true;
-    let mut z = Complex::new(0.0, 0.0); 
+    let mut z = Complex::new(0.0, 0.0);
     let mut z_norm;
 
     for _ in 0..n_iter {
-        z = z*z + c; 
-        z_norm = z.norm_sqr(); 
+        z = z * z + c;
+        z_norm = z.norm_sqr();
         if z_norm > 4.0 {
             in_set = false;
             break;
-        }
-        else if z_norm < 0.01 {
+        } else if z_norm < 0.01 {
             break;
         }
     }
     return in_set;
 }
-
